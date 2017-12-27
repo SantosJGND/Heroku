@@ -18,15 +18,8 @@ import plotly.figure_factory as ff
 import pandas as pd
 
 
-# Setup the app
-# Make sure not to change this file name or the variable names below,
-# the template is configured to execute 'server' on 'app.py'
-server = flask.Flask(__name__)
-server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
-app = dash.Dash(__name__, server=server)
-
-
-# Put your Dash code here
+app = dash.Dash(__name__)
+server = app.server
 
 
 ### Import data sets
@@ -69,10 +62,6 @@ Code_choices = Code_choices[::-1]
 
 
 #### Prepqre Dash apps
-app = dash.Dash()
-
-app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/dZVMbK.css'})
-
 
 app.layout = html.Div([
     
