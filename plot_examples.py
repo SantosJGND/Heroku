@@ -1,27 +1,14 @@
-# Import required libraries
-import os
-from random import randint
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 18 22:09:46 2017
 
-import plotly.plotly as py
-from plotly.graph_objs import *
+@author: jgarcia
+"""
 
-import flask
 import dash
-from dash.dependencies import Input, Output, State, Event
-import dash_core_components as dcc
+from dash.dependencies import Input, Output
 import dash_html_components as html
-
-
-# Setup the app
-# Make sure not to change this file name or the variable names below,
-# the template is configured to execute 'server' on 'app.py'
-server = flask.Flask(__name__)
-server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
-app = dash.Dash(__name__, server=server)
-
-
-# Put your Dash code here
-
+import dash_core_components as dcc
 import plotly.graph_objs as go
 
 import plotly.figure_factory as ff
@@ -31,13 +18,10 @@ import sys
 import os
 
 ### Import data sets
-#ID= sys.argv[1]
-#Where = sys.argv[2]
-#ref= sys.argv[3]
+ID= sys.argv[1]
+Where = sys.argv[2]
+ref= sys.argv[3]
 
-ID = 'PAG'
-Where = "1"
-ref = 'Indica'
 ###
 
 Home = ref + "_regions/"
@@ -342,7 +326,11 @@ def update_figure(selected_column,opac,threshold):
 }
 }
 
+#@app.callback(
+#    Output(component_id= 'opacity',component_property= 'value'),
+#    [Input(component_id= component_id= )]
+#)
 
-# Run the Dash app
 if __name__ == '__main__':
-    app.server.run(debug=True, threaded=True)
+    app.run_server(debug=True)
+    
