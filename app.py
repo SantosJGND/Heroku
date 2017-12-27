@@ -11,6 +11,12 @@ from dash.dependencies import Input, Output, State, Event
 import dash_core_components as dcc
 import dash_html_components as html
 
+import plotly.graph_objs as go
+
+import plotly.figure_factory as ff
+
+import pandas as pd
+
 
 # Setup the app
 # Make sure not to change this file name or the variable names below,
@@ -22,13 +28,6 @@ app = dash.Dash(__name__, server=server)
 
 # Put your Dash code here
 
-import plotly.graph_objs as go
-
-import plotly.figure_factory as ff
-
-import pandas as pd
-import sys
-import os
 
 ### Import data sets
 #ID= sys.argv[1]
