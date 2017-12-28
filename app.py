@@ -21,6 +21,7 @@ import pandas as pd
 app = dash.Dash(__name__)
 server = app.server
 
+app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/dZVMbK.css'})
 
 ### Import data sets
 #ID= sys.argv[1]
