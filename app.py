@@ -16,7 +16,7 @@ import plotly.graph_objs as go
 import plotly.figure_factory as ff
 
 import pandas as pd
-
+import numpy as np
 
 app = dash.Dash(__name__)
 server = app.server
@@ -52,8 +52,6 @@ print(df.head())
 #### color reference
 
 color_ref= ['red','yellow','blue','black','green','purple','orange','deepskyblue2','grey','darkolivegreen1','navy','chartreuse','darkorchid3','goldenrod2']
-
-pop_refs = ["Indica","cAus","Japonica","GAP","cBasmati","Admix"]
 
 ### Vectors and names
 
@@ -113,7 +111,7 @@ app.layout = html.Div([
     id= "threshold",
     min= .05,
     max= 1,
-    value= .2,
+    marks= {i:str(i) for i in np.arange(.05,1,.05)},
     step= .05
     )
     ],className='row'),
@@ -151,7 +149,7 @@ app.layout = html.Div([
             'symbol': 'circle',
             'opacity': .8
           },
-          name = i
+          name = i + 1
         ) for i in cluster_pca[0].unique()],
         'layout': {
       "autosize": True, 
@@ -229,7 +227,7 @@ def generate_table(dataframe):
     [Input('chose_color','value')])
 def update_density(selected_group):
     if selected_group != 0:
-        dense_plot=  ff.create_distplot([vectors.iloc[:,selected_group-1]], [color_ref[selected_group-1]])
+        dense_plot=  ff.create_distplot([vectors.iloc[:,selected_group-1]], [str(selected_group)])
         dense_plot['layout'].update(title='<b>likelihood density</b>')
         return dense_plot
 
@@ -260,29 +258,37 @@ def update_table(selected_group,threshold):
     Input(component_id= "threshold",component_property= "value")])
 def update_figure(selected_column,opac,threshold):
     if selected_column == 0:
-        scheme = [color_ref[x] for x in df[0]]
+#        scheme = [pop_refs[x] for x in df[0]]
+        scheme = [int(x) for x in df[0]]
+        pop_refs= ["Indica","cAus","Japonica","GAP","cBasmati","Admix"]
+        color_here= color_ref
+        print(list(set(scheme)))
+        print(df.shape)
     else:
-        scheme = [["grey","red"][int(x>=threshold)] for x in vectors.iloc[:,selected_column-1]]
+#        scheme = [["grey","red"][int(x>=threshold)] for x in vectors.iloc[:,selected_column-1]]
+        scheme = [int(x>=threshold) for x in vectors.iloc[:,selected_column-1]]
+        pop_refs= ["Below threshold","Above threshold"]
+        color_here= ["grey","red"]
     return {
     'data': [go.Scatter3d(
-        x = df[df[0] == i][2],
-        y = df[df[0] == i][3],
-        z = df[df[0] == i][4],
+        x = df.iloc[[x for x in range(len(scheme)) if scheme[x] == i],2],
+        y = df.iloc[[x for x in range(len(scheme)) if scheme[x] == i],3],
+        z = df.iloc[[x for x in range(len(scheme)) if scheme[x] == i],4],
         type='scatter3d',
         mode= "markers",
-        text= orderCore[["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
+        text= orderCore.iloc[[x for x in range(len(scheme)) if scheme[x] == i],:][["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
       "<b>{}</b><br>Name: {}<br>Country: {}<br>{}".format(lbgf[0],lbgf[1],lbgf[2],lbgf[3])),
         axis= 1),
     marker= {
 #        'color': scheme,
-        'color': color_ref[i],
+        'color': color_here[i],
         'line': {'width': 0},
         'size': 4,
         'symbol': 'circle',
       "opacity": opac
       },
       name= pop_refs[i]
-    ) for i in df[0].unique()],
+    ) for i in list(set(scheme))],
     'layout': {
   "autosize": True, 
   "hovermode": "closest",
