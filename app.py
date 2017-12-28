@@ -129,7 +129,7 @@ app.layout = html.Div([
     className='six columns',
     id = 'chose_color',
     value = 0,
-    options = [{"label":Code_choices[x],"value": x} for x in range(len(Code_choices))]
+    options = [{"label":x,"value": x} for x in range(len(Code_choices))]
     )
     ],className= "row"),
     
