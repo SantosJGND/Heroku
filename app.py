@@ -23,6 +23,7 @@ server = app.server
 
 app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/dZVMbK.css'})
 
+
 ### Import data sets
 #ID= sys.argv[1]
 #Where = sys.argv[2]
@@ -46,12 +47,13 @@ vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t'
 print(orderCore.head())
 
 
-print(vectors.head())
+print(df.head())
 #print(orderCore.head())
 #### color reference
 
-color_ref= ['red','yellow','blue','black','green','purple','green','deepskyblue2','red3','darkolivegreen1','navy','chartreuse','darkorchid3','goldenrod2']
+color_ref= ['red','yellow','blue','black','green','purple','orange','deepskyblue2','grey','darkolivegreen1','navy','chartreuse','darkorchid3','goldenrod2']
 
+pop_refs = ["Indica","cAus","Japonica","GAP","cBasmati","Admix"]
 
 ### Vectors and names
 
@@ -136,22 +138,30 @@ app.layout = html.Div([
     html.Div([
     dcc.Graph(id = "clusters",className="six columns",figure= {
             'data': [go.Scatter3d(
-            x = cluster_pca[3],
-            y = cluster_pca[4],
-            z = cluster_pca[5],
+            x = cluster_pca[cluster_pca[0] == i][3],
+            y = cluster_pca[cluster_pca[0] == i][4],
+            z = cluster_pca[cluster_pca[0] == i][5],
             type='scatter3d',
             mode= "markers",
         marker= {
-            'color': [color_ref[x] for x in cluster_pca[0]],
+#            'color': [color_ref[x] for x in cluster_pca[0]],
+#            'color': cluster_pca[0],
             'line': {'width': 0},
             'size': 4,
             'symbol': 'circle',
             'opacity': .8
-          }
-        )],
+          },
+          name = i
+        ) for i in cluster_pca[0].unique()],
         'layout': {
       "autosize": True, 
       "hovermode": "closest",
+      "legend": {
+        "x": 0.873529411765, 
+        "y": 0.877829326396, 
+        "borderwidth": 1, 
+        "font": {"size": 13}
+      },
       "scene": {
         "aspectmode": "auto", 
         "aspectratio": {
@@ -255,22 +265,24 @@ def update_figure(selected_column,opac,threshold):
         scheme = [["grey","red"][int(x>=threshold)] for x in vectors.iloc[:,selected_column-1]]
     return {
     'data': [go.Scatter3d(
-        x = df[2],
-        y = df[3],
-        z = df[4],
+        x = df[df[0] == i][2],
+        y = df[df[0] == i][3],
+        z = df[df[0] == i][4],
         type='scatter3d',
         mode= "markers",
         text= orderCore[["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
       "<b>{}</b><br>Name: {}<br>Country: {}<br>{}".format(lbgf[0],lbgf[1],lbgf[2],lbgf[3])),
         axis= 1),
     marker= {
-        'color': scheme,
+#        'color': scheme,
+        'color': color_ref[i],
         'line': {'width': 0},
         'size': 4,
         'symbol': 'circle',
       "opacity": opac
-      }
-    )],
+      },
+      name= pop_refs[i]
+    ) for i in df[0].unique()],
     'layout': {
   "autosize": True, 
   "hovermode": "closest",
