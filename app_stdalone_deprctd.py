@@ -31,22 +31,23 @@ app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/dZVMbK.css'
 
 ID = 'PAG'
 Where = "1"
-#ref = 'Indica'
+ref = 'Indica'
 ###
 
+Home = ref + "_regions/"
 
-#df = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
-#
-#cluster_pca = pd.read_csv(Home + 'DIM_private_'+ref+'_comp_CHR'+Where+'.'+ID+'.txt',sep= '\t',header= None)
+df = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
+
+cluster_pca = pd.read_csv(Home + 'DIM_private_'+ref+'_comp_CHR'+Where+'.'+ID+'.txt',sep= '\t',header= None)
 
 orderCore= pd.read_csv('Order_core_csv.txt')
 
-#vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t')
+vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t')
 
 print(orderCore.head())
 
 
-#print(df.head())
+print(df.head())
 #print(orderCore.head())
 #### color reference
 
@@ -56,26 +57,14 @@ color_ref= ['red','yellow','blue','black','green','purple','orange','deepskyblue
 
 #Code_choices= ['Full_colors','red','yellow','blue','black','orange','purple','green','deepskyblue2','red3','darkolivegreen1']
 
-#Code_choices = [color_ref[len(vectors.columns)-x-1] for x in range(len(vectors.columns))]
-#Code_choices.extend(["Full_colors"]) 
-#Code_choices = Code_choices[::-1]
+Code_choices = [color_ref[len(vectors.columns)-x-1] for x in range(len(vectors.columns))]
+Code_choices.extend(["Full_colors"]) 
+Code_choices = Code_choices[::-1]
 
 
 #### Prepqre Dash apps
 
 app.layout = html.Div([
-    
-    html.Div([
-    dcc.Dropdown(
-    className = "two columns",
-    id= "Examples",
-    value= "Aus",
-    options= [{"label":x,"value":x} for x in ["Indica","Aus","Japonica"]],
-    placeholder="Select an Example",
-    )
-    ],className= "row"),
-    
-    html.Hr(),
     
     
     html.Div([
@@ -138,110 +127,20 @@ app.layout = html.Div([
     className='six columns',
     id = 'chose_color',
     value = 0,
-    options = [{"label":x,"value": x} for x in range(10)]
+    options = [{"label":x,"value": x} for x in range(len(Code_choices))]
     )
     ],className= "row"),
     
     html.Hr(),
     
     html.Div([
-    dcc.Graph(id = "clusters",className="six columns"),
-    dcc.Graph(id= "density_plot",className= "six columns")
-    ]),
-
-    html.Div(id= 'intermediate_vectors',style= {'display': 'none'}),
-    html.Div(id= 'intermediate_clusters',style= {'display': 'none'}),
-    html.Div(id= 'intermediate_loadings',style= {'display': 'none'}),
-])
-
-
-
-
-
-def generate_table(dataframe):
-    return html.Table(
-        # Header
-        [html.Tr([html.Th(col) for col in dataframe.columns])] +
-
-        # Body
-        [html.Tr([
-            html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-        ]) for i in range(len(dataframe))]
-    )
-
-
-
-@app.callback(
-    Output("intermediate_loadings","children"),
-    [Input("Examples","value")])
-def update_loadings(ref):
-    Home = ref + "_regions/"
-    df = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
-    return df.to_json()
-
-@app.callback(
-    Output("intermediate_vectors","children"),
-    [Input("Examples","value")])
-def update_vectors(ref):
-    Home = ref + "_regions/"
-    vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t')
-    return vectors.to_json()
-
-@app.callback(
-    Output("intermediate_clusters","children"),
-    [Input("Examples","value")])
-def update_clusters(ref):
-    Home = ref + "_regions/"
-    cluster_pca = pd.read_csv(Home + 'DIM_private_'+ref+'_comp_CHR'+Where+'.'+ID+'.txt',sep= '\t',header= None)
-    return cluster_pca.to_json()
-
-
-
-@app.callback(
-   Output('density_plot','figure'),
-    [Input('chose_color','value'),
-     Input('intermediate_vectors','children')])
-def update_density(selected_group,Vectors):
-    vectors = pd.read_json(Vectors)
-    if selected_group != 0:
-        dense_plot=  ff.create_distplot([vectors.iloc[:,selected_group-1]], [str(selected_group)])
-        dense_plot['layout'].update(title='<b>likelihood density</b>')
-        return dense_plot
-
-
-@app.callback(
-    Output('table-content','children'),
-    [Input('chose_color','value'),
-     Input('threshold','value'),
-     Input('intermediate_vectors','children')])
-def update_table(selected_group,threshold,Vectors):
-    vectors= pd.read_json(Vectors)
-    if selected_group== 0:
-        show_table = [x for x in range(len(vectors))]
-    else:
-        show_table = [x for x in range(len(vectors)) if vectors.iloc[x,selected_group-1] >= threshold]
-    return html.Div(
-        children= generate_table(orderCore[["ID","NAME","COUNTRY","Initial_subpop"]].iloc[show_table,:]),
-        style={
-            'overflowX': 'scroll',
-            'overflowY': 'scroll',
-            'height': '450px',
-            'display': 'block',
-            'paddingLeft': '15px'
-        }
-)
-
-@app.callback(
-    Output("clusters","figure"),
-    [Input("intermediate_clusters","children")])
-def update_secondFigure(clusters):
-    cluster_pca= pd.read_json(clusters)
-    return {'data': [go.Scatter3d(
-        x = cluster_pca[cluster_pca[0] == i][3],
-        y = cluster_pca[cluster_pca[0] == i][4],
-        z = cluster_pca[cluster_pca[0] == i][5],
-        type='scatter3d',
-        mode= "markers",
+    dcc.Graph(id = "clusters",className="six columns",figure= {
+            'data': [go.Scatter3d(
+            x = cluster_pca[cluster_pca[0] == i][3],
+            y = cluster_pca[cluster_pca[0] == i][4],
+            z = cluster_pca[cluster_pca[0] == i][5],
+            type='scatter3d',
+            mode= "markers",
         marker= {
 #            'color': [color_ref[x] for x in cluster_pca[0]],
 #            'color': cluster_pca[0],
@@ -304,17 +203,60 @@ def update_secondFigure(clusters):
       "yaxis": {"title": "V2"}
     }
     }
+    ),
+    dcc.Graph(id= "density_plot",className= "six columns")
+    ])
+])
+
+
+
+def generate_table(dataframe):
+    return html.Table(
+        # Header
+        [html.Tr([html.Th(col) for col in dataframe.columns])] +
+
+        # Body
+        [html.Tr([
+            html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+        ]) for i in range(len(dataframe))]
+    )
+
+
+@app.callback(
+   Output('density_plot','figure'),
+    [Input('chose_color','value')])
+def update_density(selected_group):
+    if selected_group != 0:
+        dense_plot=  ff.create_distplot([vectors.iloc[:,selected_group-1]], [str(selected_group)])
+        dense_plot['layout'].update(title='<b>likelihood density</b>')
+        return dense_plot
+
+@app.callback(
+    Output('table-content','children'),
+    [Input('chose_color','value'),
+     Input('threshold','value')])
+def update_table(selected_group,threshold):
+    if selected_group== 0:
+        show_table = [x for x in range(len(df))]
+    else:
+        show_table = [x for x in range(len(df)) if vectors.iloc[x,selected_group-1] >= threshold]
+    return html.Div(
+        children= generate_table(orderCore[["ID","NAME","COUNTRY","Initial_subpop"]].iloc[show_table,:]),
+        style={
+            'overflowX': 'scroll',
+            'overflowY': 'scroll',
+            'height': '450px',
+            'display': 'block',
+            'paddingLeft': '15px'
+        }
+)
 
 @app.callback(
     Output(component_id= 'local_pca',component_property = 'figure'),
     [Input(component_id= 'chose_color',component_property = 'value'),
      Input(component_id= 'opacity',component_property= 'value'),
-    Input(component_id= "threshold",component_property= "value"),
-    Input("intermediate_loadings","children"),
-    Input("intermediate_vectors",'children')])
-def update_figure(selected_column,opac,threshold,loadings,Vectors):
-    df= pd.read_json(loadings)
-    vectors= pd.read_json(Vectors)
+    Input(component_id= "threshold",component_property= "value")])
+def update_figure(selected_column,opac,threshold):
     if selected_column == 0:
 #        scheme = [pop_refs[x] for x in df[0]]
         scheme = [int(x) for x in df[0]]
