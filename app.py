@@ -35,18 +35,25 @@ Where = "1"
 ###
 
 
-#df = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
+#df_test = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
 #
 #cluster_pca = pd.read_csv(Home + 'DIM_private_'+ref+'_comp_CHR'+Where+'.'+ID+'.txt',sep= '\t',header= None)
 
 orderCore= pd.read_csv('Order_core_csv.txt')
 
 #vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t')
-
-print(orderCore.head())
-
-
-#print(df.head())
+print("ola ")
+#print(orderCore.head())
+#print(orderCore.sNMF_K3)
+scheme = [x for x in range(len(orderCore.sNMF_K3)) if orderCore.sNMF_K3[x] == 1]
+text= orderCore.iloc[scheme,:][["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
+  "<b>{}</b><br>Name: {}<br>Country: {}<br>{}".format(lbgf[0],lbgf[1],lbgf[2],lbgf[3])),
+axis= 1)
+print(text[:10])
+#print(scheme[:10])
+#print(orderCore.iloc[scheme,:])
+#
+##print(df.head())
 #print(orderCore.head())
 #### color reference
 
@@ -120,6 +127,7 @@ app.layout = html.Div([
     updatemode= "drag",
     className= "six columns",
     id= "threshold",
+    value= .1,
     min= .05,
     max= 1,
     marks= {i:str(i) for i in np.arange(.05,1,.05)},
@@ -177,6 +185,7 @@ def generate_table(dataframe):
 def update_loadings(ref):
     Home = ref + "_regions/"
     df = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
+    df["order"] = range(len(df))
     return df.to_json()
 
 @app.callback(
@@ -185,6 +194,7 @@ def update_loadings(ref):
 def update_vectors(ref):
     Home = ref + "_regions/"
     vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t')
+    vectors["order"]= range(len(vectors))
     return vectors.to_json()
 
 @app.callback(
@@ -193,6 +203,7 @@ def update_vectors(ref):
 def update_clusters(ref):
     Home = ref + "_regions/"
     cluster_pca = pd.read_csv(Home + 'DIM_private_'+ref+'_comp_CHR'+Where+'.'+ID+'.txt',sep= '\t',header= None)
+#    cluster_pca["order"] = range(len(cluster_pca))
     return cluster_pca.to_json()
 
 
@@ -203,6 +214,7 @@ def update_clusters(ref):
      Input('intermediate_vectors','children')])
 def update_density(selected_group,Vectors):
     vectors = pd.read_json(Vectors)
+    vectors= vectors.sort_values("order")
     if selected_group != 0:
         dense_plot=  ff.create_distplot([vectors.iloc[:,selected_group-1]], [str(selected_group)])
         dense_plot['layout'].update(title='<b>likelihood density</b>')
@@ -216,6 +228,7 @@ def update_density(selected_group,Vectors):
      Input('intermediate_vectors','children')])
 def update_table(selected_group,threshold,Vectors):
     vectors= pd.read_json(Vectors)
+    vectors = vectors.sort_values("order")
     if selected_group== 0:
         show_table = [x for x in range(len(vectors))]
     else:
@@ -236,6 +249,8 @@ def update_table(selected_group,threshold,Vectors):
     [Input("intermediate_clusters","children")])
 def update_secondFigure(clusters):
     cluster_pca= pd.read_json(clusters)
+#    cluster_pca= cluster_pca.sort_values("order")
+    print(cluster_pca.head())
     return {'data': [go.Scatter3d(
         x = cluster_pca[cluster_pca[0] == i][3],
         y = cluster_pca[cluster_pca[0] == i][4],
@@ -298,7 +313,7 @@ def update_secondFigure(clusters):
           "type": "linear"
         }
       }, 
-      "showlegend": True, 
+      "showlegend": False, 
       "title": "<b>clusters - observations</b>", 
       "xaxis": {"title": "V3"}, 
       "yaxis": {"title": "V2"}
@@ -314,27 +329,30 @@ def update_secondFigure(clusters):
     Input("intermediate_vectors",'children')])
 def update_figure(selected_column,opac,threshold,loadings,Vectors):
     df= pd.read_json(loadings)
+    df= df.sort_values("order")
     vectors= pd.read_json(Vectors)
+    vectors= vectors.sort_values("order")
     if selected_column == 0:
 #        scheme = [pop_refs[x] for x in df[0]]
-        scheme = [int(x) for x in df[0]]
+        scheme = [int(df.iloc[x,0]) for x in range(len(df))]
+#        print(scheme)
+        coords = {y:[x for x in range(len(scheme)) if scheme[x] == y] for y in list(set(scheme))}
         pop_refs= ["Indica","cAus","Japonica","GAP","cBasmati","Admix"]
         color_here= color_ref
-        print(list(set(scheme)))
-        print(df.shape)
     else:
 #        scheme = [["grey","red"][int(x>=threshold)] for x in vectors.iloc[:,selected_column-1]]
-        scheme = [int(x>=threshold) for x in vectors.iloc[:,selected_column-1]]
+        scheme = [int(vectors.iloc[x,selected_column-1]>=threshold) for x in range(len(df["0"]))]
+        coords = {y:[x for x in range(len(scheme)) if scheme[x] == y] for y in list(set(scheme))}
         pop_refs= ["Below threshold","Above threshold"]
         color_here= ["grey","red"]
     return {
     'data': [go.Scatter3d(
-        x = df.iloc[[x for x in range(len(scheme)) if scheme[x] == i],2],
-        y = df.iloc[[x for x in range(len(scheme)) if scheme[x] == i],3],
-        z = df.iloc[[x for x in range(len(scheme)) if scheme[x] == i],4],
+        x = df.iloc[coords[i],2],
+        y = df.iloc[coords[i],3],
+        z = df.iloc[coords[i],4],
         type='scatter3d',
         mode= "markers",
-        text= orderCore.iloc[[x for x in range(len(scheme)) if scheme[x] == i],:][["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
+        text= orderCore.iloc[coords[i],:][["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
       "<b>{}</b><br>Name: {}<br>Country: {}<br>{}".format(lbgf[0],lbgf[1],lbgf[2],lbgf[3])),
         axis= 1),
     marker= {
@@ -349,7 +367,7 @@ def update_figure(selected_column,opac,threshold,loadings,Vectors):
     ) for i in list(set(scheme))],
     'layout': {
   "autosize": True, 
-  "hovermode": "closest",
+  "hovermode": "closest", 
   "legend": {
   "x": 0.798366013072, 
   "y": 0.786064620514, 
