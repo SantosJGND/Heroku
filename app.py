@@ -41,32 +41,9 @@ Where = "1"
 
 orderCore= pd.read_csv('Order_core_csv.txt')
 
-#vectors = pd.read_csv(Home + "Profile_"+ref+"_CHR"+Where+"."+ID+".txt",sep= '\t')
-print("ola ")
-#print(orderCore.head())
-#print(orderCore.sNMF_K3)
-scheme = [x for x in range(len(orderCore.sNMF_K3)) if orderCore.sNMF_K3[x] == 1]
-text= orderCore.iloc[scheme,:][["ID","NAME","COUNTRY","Initial_subpop"]].apply(lambda lbgf: (
-  "<b>{}</b><br>Name: {}<br>Country: {}<br>{}".format(lbgf[0],lbgf[1],lbgf[2],lbgf[3])),
-axis= 1)
-print(text[:10])
-#print(scheme[:10])
-#print(orderCore.iloc[scheme,:])
-#
-##print(df.head())
-#print(orderCore.head())
 #### color reference
 
 color_ref= ['red','yellow','blue','black','green','purple','orange','deepskyblue2','grey','darkolivegreen1','navy','chartreuse','darkorchid3','goldenrod2']
-
-### Vectors and names
-
-#Code_choices= ['Full_colors','red','yellow','blue','black','orange','purple','green','deepskyblue2','red3','darkolivegreen1']
-
-#Code_choices = [color_ref[len(vectors.columns)-x-1] for x in range(len(vectors.columns))]
-#Code_choices.extend(["Full_colors"]) 
-#Code_choices = Code_choices[::-1]
-
 
 #### Prepqre Dash apps
 
@@ -156,6 +133,10 @@ app.layout = html.Div([
     dcc.Graph(id = "clusters",className="six columns"),
     dcc.Graph(id= "density_plot",className= "six columns")
     ]),
+    
+    html.Div([
+    dcc.Graph(id= "bars",className= "six columns")
+    ]),
 
     html.Div(id= 'intermediate_vectors',style= {'display': 'none'}),
     html.Div(id= 'intermediate_clusters',style= {'display': 'none'}),
@@ -207,6 +188,32 @@ def update_clusters(ref):
     return cluster_pca.to_json()
 
 
+@app.callback(
+    Output('bars','figure'),
+    [Input('intermediate_clusters','children')])
+def cluster_bars(clusters):
+    clusters= pd.read_json(clusters)
+    whom= sorted(list(set(clusters[0])))
+    print(whom)
+    nb= [len([x for x in clusters[0] if x == y]) for y in whom]
+    nc= [str(x + 1) for x in whom]
+    trace = [go.Bar(
+    x= nc,
+    y= nb,
+    text= nb,
+    marker=dict(
+        color='rgb(158,202,225)',
+        line=dict(
+            color='rgb(8,48,107)',
+            width=1.5),
+    ),
+    opacity= .6
+    )]
+    layout= go.Layout(
+    title= 'cluster proportions'
+    )
+    fig= go.Figure(data=trace,layout=layout)
+    return fig
 
 @app.callback(
    Output('density_plot','figure'),
@@ -319,6 +326,7 @@ def update_secondFigure(clusters):
       "yaxis": {"title": "V2"}
     }
     }
+
 
 @app.callback(
     Output(component_id= 'local_pca',component_property = 'figure'),
