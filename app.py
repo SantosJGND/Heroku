@@ -195,7 +195,7 @@ def cluster_bars(clusters):
     clusters= pd.read_json(clusters)
     whom= sorted(list(set(clusters[0])))
     print(whom)
-    nb= [len([x for x in clusters[0] if x == y]) for y in whom]
+    nb= [round(len([x for x in clusters[0] if x == y]) / float(len(clusters)),3) for y in whom]
     nc= [str(x + 1) for x in whom]
     trace = [go.Bar(
     x= nc,
