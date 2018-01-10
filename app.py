@@ -53,42 +53,39 @@ The following application was developped to accompany the poster:
 **Exploring the Mosaic Structure of Rice Genomes**
 
 Presented at the Plant & Animal Genome XXVI conference.
-<h6> The code is available on [github](https://github.com/Joaos3092/PAG_2018)
-
+* The code is available on [github](https://github.com/Joaos3092/PAG_2018)
+\n
 ### Guide
 Below you will find a description of targeted genetic variation at three specific
 regions of chromosome 1 of *Oryza Sativa*. 
-
-Preceding this analysis, a whole genome crawl was performed to in order to assess the
+\n
+Preceding this analysis, a whole genome crawl was performed to in order to assess the \n
 most likely origin, in population terms, of each region of each accession in the data set. 
+\n
+The first graph, if `View` is set to `ALL`, is the output of that crawl for 40 cBasmati accessions.
+\n
+the colors represent classifications into reference populations, allowing for 2 and 3-way uncertainty:\n
+     
+  
+group_colors= `{ \n
+    "blue": "Japonica" \n
+    "yellow": "circumAus" \n
+    "red": "Indica" \n
+    "purple": "Indica-Japonica" \n
+    "orange": "Indica-cAus" \n
+    "green": "cAus-Japonica" \n
+    "silver": "cAus-Indica-Japonica" \n
+    "black": "outlier" \n
+}`\n
+  
 
-The first graph, if `View` is set to `ALL`, is the output of that crawl for 40
-cBasmati accessions.
-
-the colors represent classifications into reference populations, allowing for 2 and 3-way uncertainty:
-
-
-`
-group_colors= {
-    "blue": "Japonica"
-    "yellow": "circumAus"
-    "red": "Indica"
-    "purple": "Indica-Japonica"
-    "orange": "Indica-cAus"
-    "green": "cAus-Japonica"
-    "silver": "cAus-Indica-Japonica"
-    "black": "outlier"
-}
-`
-
-
-This colorfull plot is the first output of our exploration into the origin of these accessions.
-However, we would also like to know if it is possible to identify subsets of the populations of origin closer 
+This colorful plot is the first output of our exploration into the origin of these accessions. \n
+However, we would also like to know if it is possible to identify subsets of the populations of origin closer \n
 to the actual donors of this introgressed material.
-
-For that purpose, at 3 regions of shared classification into one of our *pure* classes among our chosen accessions,
-profiles of the clusters each was connected with were extracted. What follows is an analysis of the correlations among those clusters,
-and what it tells us about genetic affiliations in the chosen regions.
+\n
+For that purpose, at 3 regions of shared classification into one of our *pure* classes among our chosen accessions,\n
+profiles of the clusters each was connected with were extracted. What follows is an analysis of the \n
+correlations among those clusters, and what it tells us about genetic affiliations in the chosen regions.
 '''
 
 ## read prepared ideogram:
@@ -300,7 +297,7 @@ def generate_table(dataframe):
 )
 def return_Ideogram(View,which):
     if View == 0:
-        image_filename = 'Ideo_IRIS_313-11825_20_4.png'
+        image_filename = 'Ideo_IRIS_313-11825.png'
         encoded_image = base64.b64encode(open(image_filename, 'rb').read())
         return [html.Img(id= 'spore',src='data:image/png;base64,{}'.format(encoded_image.decode()))]
     else:
