@@ -25,20 +25,12 @@ server = app.server
 app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/dZVMbK.css'})
 
 
+#######################
+#######################
 ### Import data sets
-#ID= sys.argv[1]
-#Where = sys.argv[2]
-#ref= sys.argv[3]
 
 ID = 'PAG'
 Where = "1"
-#ref = 'Indica'
-###
-
-
-#df_test = pd.read_csv(Home + 'DIM_private_'+ ref +'_request_CHR'+ Where +'.'+ID+'.txt',sep= '\t',header= None)
-#
-#cluster_pca = pd.read_csv(Home + 'DIM_private_'+ref+'_comp_CHR'+Where+'.'+ID+'.txt',sep= '\t',header= None)
 
 orderCore= pd.read_csv('Order_core_csv.txt')
 
@@ -53,7 +45,7 @@ The following application was developped to accompany the poster:
 **Exploring the Mosaic Structure of Rice Genomes**
 
 Presented at the Plant & Animal Genome XXVI conference.
-* The code is available on [github](https://github.com/Joaos3092/PAG_2018)
+* The code for this application is available on [github](https://github.com/Joaos3092/PAG_2018)
 \n
 ### Guide
 Below you will find a description of targeted genetic variation at three specific
@@ -62,12 +54,13 @@ regions of chromosome 1 of *Oryza Sativa*.
 Preceding this analysis, a whole genome crawl was performed to in order to assess the \n
 most likely origin, in population terms, of each region of each accession in the data set. 
 \n
-The first graph, if `View` is set to `ALL`, is the output of that crawl for 40 cBasmati accessions.
+The first graph, if `View` is set to `ALL`, is the output of that crawl along Chr 1 for 40 cBasmati accessions.
 \n
-the colors represent classifications into reference populations, allowing for 2 and 3-way uncertainty:\n
-     
-  
-group_colors= `{ \n
+the colors represent classifications into reference populations, allowing for 2 and 3-way uncertainty:
+
+   
+```
+group_colors= { \n
     "blue": "Japonica" \n
     "yellow": "circumAus" \n
     "red": "Indica" \n
@@ -76,16 +69,19 @@ group_colors= `{ \n
     "green": "cAus-Japonica" \n
     "silver": "cAus-Indica-Japonica" \n
     "black": "outlier" \n
-}`\n
-  
+}
+```
 
+
+\n
 This colorful plot is the first output of our exploration into the origin of these accessions. \n
 However, we would also like to know if it is possible to identify subsets of the populations of origin closer \n
 to the actual donors of this introgressed material.
 \n
 For that purpose, at 3 regions of shared classification into one of our *pure* classes among our chosen accessions,\n
-profiles of the clusters each was connected with were extracted. What follows is an analysis of the \n
-correlations among those clusters, and what it tells us about genetic affiliations in the chosen regions.
+profiles of the clusters each was connected with were extracted. If `View` is set to `Requested`, then only the location of these\n
+selected clusters is shown, in the colour of the chosen reference population. \n 
+What follows is an analysis of the correlations among those clusters, and of what it tells us about genetic affiliations in the chosen regions.
 '''
 
 ## read prepared ideogram:
@@ -163,7 +159,8 @@ app.layout = html.Div([
     
     html.Hr(),
     
-    html.Div(
+    html.Div([
+    html.H6(children= 'View'),
     dcc.RadioItems(
     id= 'View',
     className= 'four columns',
@@ -171,7 +168,7 @@ app.layout = html.Div([
     labelStyle={'display': 'inline-block'},
     options = [{'label':'ALL','value': 0},
 		{'label':'Requested','value':1}]
-    ),
+    )],
     className= 'row'
     ),
     html.Div(
@@ -181,6 +178,7 @@ app.layout = html.Div([
     html.Hr(),
     
     html.Div([
+    html.H6(children= 'Request reference population',className= 'two columns'),
     dcc.Dropdown(
     className = "two columns",
     id= "Examples",
@@ -197,6 +195,7 @@ app.layout = html.Div([
     html.H4(
     id= "header1",className= "six columns",children= "Feature space"
     ),
+    
     html.H4(
     id= "header2",className= "six columns",children= "selected accessions"
     )    
@@ -208,6 +207,14 @@ app.layout = html.Div([
     html.Div(id='table-content', className='six columns')
     ],className='row'),
     
+    html.Div([
+    html.Div(dcc.Markdown(children="""**Fig. 1** relative distances among accessions given cluster profiles selected and analysed. 
+    In fact, loadings plot of PCA run on the former."""),className='six columns'),
+    html.Div(dcc.Markdown(children= """**Table 1** Passport information on accessions shown in Fig. 1. If cluster cloud is selected
+    below, then only accessions in red (updated plot) are shown."""),className= 'six columns')
+    ],className= "row"),
+    
+    
     html.Hr(),
     
     html.Div([
@@ -216,7 +223,7 @@ app.layout = html.Div([
     ),
     html.H5(
     id= "header2",className= "six columns",children= "Likelihood threshold"
-    )    
+    )
     ],className= "row"),
     
     html.Div([
@@ -229,7 +236,7 @@ app.layout = html.Div([
     max = 1,
     value = .8,
     step = .1,
-    #marks = [str(.1*x) for x in range(1,10)]
+    marks = {.1*x:str(round(.1*x,1)) for x in range(3,9)}
     ),
     dcc.Slider(
     updatemode= "drag",
@@ -242,12 +249,18 @@ app.layout = html.Div([
     step= .05
     )
     ],className='row'),
-    
+        
     html.Hr(),
+    
     
     html.Div([
     html.H5(children= 'Chose a color')
     ],className= "row"),
+    
+    html.Div(dcc.Markdown(children= """Clusters profiles in **Fig. 3** were grouped by colour and given a number each (hover over the points to see number).
+    Proportion of different cluster types is plotted below to help you chose interesting clusters to analyse.
+    Proximity among cluster profiles correlates with individual contribution patterns. When a group is chosen, the density of mean individual likelihoods across
+    that group's profiles is plotted below (**Fig. 5**). Accessions with mean likelihoods above the *Lilelihood threshold* selected above will appear in red in **Fig. 1**."""),className= 'row'),
     
     html.Div([
     dcc.Dropdown(
@@ -257,7 +270,7 @@ app.layout = html.Div([
     options = [{"label":x,"value": x} for x in range(10)]
     )
     ],className= "row"),
-    
+
     html.Hr(),
     
     html.Div([
@@ -265,14 +278,22 @@ app.layout = html.Div([
     dcc.Graph(id= "density_plot",className= "six columns")
     ]),
     
+    html.Div([html.Div(dcc.Markdown(children= """**Fig.3** Relation among cluster profiles selected. In fact the distribution in feature space 
+    of these profiles following principal component analysis."""),className= 'six columns'),
+    html.Div(dcc.Markdown(children= """**Fig. 5** Density plot of average Likelihood by accession across cluster cloud selected."""),className= 'six columns')],
+    className= 'row'),
+    
     html.Div([
     dcc.Graph(id= "bars",className= "six columns")
     ]),
+    
+    html.Div(html.Div(dcc.Markdown(children= """**Fig. 4** proportion of cluster profiles by cloud (read *cluster*) in **clusters - observations**"""),
+                      className= 'six columns'),className= 'row'),
 
     html.Div(id= 'intermediate_vectors',style= {'display': 'none'}),
     html.Div(id= 'intermediate_clusters',style= {'display': 'none'}),
     html.Div(id= 'intermediate_loadings',style= {'display': 'none'}),
-])
+],className= 'gallery')
 
 
 
@@ -346,7 +367,6 @@ def update_clusters(ref):
 def cluster_bars(clusters):
     clusters= pd.read_json(clusters)
     whom= sorted(list(set(clusters[0])))
-    print(whom)
     nb= [round(len([x for x in clusters[0] if x == y]) / float(len(clusters)),3) for y in whom]
     nc= [str(x + 1) for x in whom]
     trace = [go.Bar(
@@ -408,8 +428,6 @@ def update_table(selected_group,threshold,Vectors):
     [Input("intermediate_clusters","children")])
 def update_secondFigure(clusters):
     cluster_pca= pd.read_json(clusters)
-#    cluster_pca= cluster_pca.sort_values("order")
-    print(cluster_pca.head())
     return {'data': [go.Scatter3d(
         x = cluster_pca[cluster_pca[0] == i][3],
         y = cluster_pca[cluster_pca[0] == i][4],
