@@ -178,7 +178,7 @@ app.layout = html.Div([
     html.Hr(),
     
     html.Div([
-    html.H6(children= 'Request reference population',className= 'two columns'),
+    html.H6(children= 'Request reference population',className= 'three columns'),
     dcc.Dropdown(
     className = "two columns",
     id= "Examples",
@@ -209,7 +209,7 @@ app.layout = html.Div([
     
     html.Div([
     html.Div(dcc.Markdown(children="""**Fig. 1** relative distances among accessions given cluster profiles selected and analysed. 
-    In fact, loadings plot of PCA run on the former."""),className='six columns'),
+    In fact, loadings plot\n of PCA run on the former."""),className='six columns'),
     html.Div(dcc.Markdown(children= """**Table 1** Passport information on accessions shown in Fig. 1. If cluster cloud is selected
     below, then only accessions in red (updated plot) are shown."""),className= 'six columns')
     ],className= "row"),
@@ -279,7 +279,7 @@ app.layout = html.Div([
     ]),
     
     html.Div([html.Div(dcc.Markdown(children= """**Fig.3** Relation among cluster profiles selected. In fact the distribution in feature space 
-    of these profiles following principal component analysis."""),className= 'six columns'),
+    of these profiles\n following principal component analysis."""),className= 'six columns'),
     html.Div(dcc.Markdown(children= """**Fig. 5** Density plot of average Likelihood by accession across cluster cloud selected."""),className= 'six columns')],
     className= 'row'),
     
