@@ -1,6 +1,7 @@
 # Import required libraries
 import os
 from random import randint
+import base64
 
 import plotly.plotly as py
 from plotly.graph_objs import *
@@ -41,6 +42,117 @@ Where = "1"
 
 orderCore= pd.read_csv('Order_core_csv.txt')
 
+
+### markdown
+
+markdown_intro= '''
+### PAG 18 Dash Application
+
+The following application was developped to accompany the poster:
+
+**Exploring the Mosaic Structure of Rice Genomes**
+
+Presented at the Plant & Animal Genome XXVI conference.
+<h6> The code is available on [github](https://github.com/Joaos3092/PAG_2018)
+
+### Guide
+Below you will find a description of targeted genetic variation at three specific
+regions of chromosome 1 of *Oryza Sativa*. 
+
+Preceding this analysis, a whole genome crawl was performed to in order to assess the
+most likely origin, in population terms, of each region of each accession in the data set. 
+
+The first graph, if `View` is set to `ALL`, is the output of that crawl for 40
+cBasmati accessions.
+
+the colors represent classifications into reference populations, allowing for 2 and 3-way uncertainty:
+
+
+`
+group_colors= {
+    "blue": "Japonica"
+    "yellow": "circumAus"
+    "red": "Indica"
+    "purple": "Indica-Japonica"
+    "orange": "Indica-cAus"
+    "green": "cAus-Japonica"
+    "silver": "cAus-Indica-Japonica"
+    "black": "outlier"
+}
+`
+
+
+This colorfull plot is the first output of our exploration into the origin of these accessions.
+However, we would also like to know if it is possible to identify subsets of the populations of origin closer 
+to the actual donors of this introgressed material.
+
+For that purpose, at 3 regions of shared classification into one of our *pure* classes among our chosen accessions,
+profiles of the clusters each was connected with were extracted. What follows is an analysis of the correlations among those clusters,
+and what it tells us about genetic affiliations in the chosen regions.
+'''
+
+## read prepared ideogram:
+file_name='example_chr1.pkl'
+ideogram_bl = pd.read_pickle(file_name)
+
+def return_figure(ideo,layout):
+    
+    chromosome_list= ideo.chrom.unique()
+    # Height of each ideogram
+    chrom_height = .5
+    
+    # Spacing between consecutive ideograms
+    chrom_spacing = .05
+    
+    # Height of the gene track. Should be smaller than `chrom_spacing` in order to
+    # fit correctly
+    gene_height = 0.0
+    
+    # Padding between the top of a gene track and its corresponding ideogram
+    gene_padding = 0.0
+    
+    
+    # Keep track of the y positions for ideograms and genes for each chromosome,
+    # and the center of each ideogram (which is where we'll put the ytick labels)
+    ybase = 0
+    chrom_ybase = {}
+    gene_ybase = {}
+    chrom_centers = {}
+    
+    # Iterate in reverse so that items in the beginning of `chromosome_list` will
+    # appear at the top of the plot
+    for chrom in chromosome_list[::-1]:
+        chrom_ybase[chrom] = ybase
+        chrom_centers[chrom] = ybase + chrom_height / 2.
+        gene_ybase[chrom] = ybase - gene_height - gene_padding
+        ybase += chrom_height + chrom_spacing
+    
+    
+    layout['shapes'] = []
+
+    for chrom,group in ideo.groupby('chrom'):
+        if chrom not in chromosome_list:
+            continue
+        for cramp in [x for x in range(group.shape[0])]:
+            layout['shapes'].append(
+            {
+            'type': 'rect',
+            'x0': group.iloc[cramp,:].start,
+            'x1': group.iloc[cramp,:].end,
+            'y0': chrom_ybase[chrom],
+            'y1': chrom_ybase[chrom] + chrom_height,
+            'fillcolor': group.iloc[cramp,:].gieStain,
+            'line': {
+                'width': 0
+            }
+            }
+            )
+    example_figure = {
+    'data': [],
+    'layout': layout
+    }
+    return example_figure
+
 #### color reference
 
 color_ref= ['red','yellow','blue','black','green','purple','orange','deepskyblue2','grey','darkolivegreen1','navy','chartreuse','darkorchid3','goldenrod2']
@@ -48,6 +160,28 @@ color_ref= ['red','yellow','blue','black','green','purple','orange','deepskyblue
 #### Prepqre Dash apps
 
 app.layout = html.Div([
+    
+    html.Div([
+    dcc.Markdown(children= markdown_intro)]),
+    
+    html.Hr(),
+    
+    html.Div(
+    dcc.RadioItems(
+    id= 'View',
+    className= 'four columns',
+    value= 0,
+    labelStyle={'display': 'inline-block'},
+    options = [{'label':'ALL','value': 0},
+		{'label':'Requested','value':1}]
+    ),
+    className= 'row'
+    ),
+    html.Div(
+    id= "ideogram"
+    ),
+    
+    html.Hr(),
     
     html.Div([
     dcc.Dropdown(
@@ -157,6 +291,27 @@ def generate_table(dataframe):
             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
         ]) for i in range(len(dataframe))]
     )
+
+
+@app.callback(
+    Output('ideogram','children'),
+    [Input('View','value'),
+    Input('Examples','value')]
+)
+def return_Ideogram(View,which):
+    if View == 0:
+        image_filename = 'Ideo_IRIS_313-11825_20_7.png'
+        encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+        return [html.Img(id= 'spore',src='data:image/png;base64,{}'.format(encoded_image.decode()))]
+    else:
+        which= ["Indica","Aus","Japonica"].index(which)
+        Regions_example= [[10,14],[39,44],[16,20]]
+        region= Regions_example[which]
+        ideo = ideogram_bl.loc[(ideogram_bl.start >= region[0]*1e6) & (ideogram_bl.end < region[1]*1e6) & (ideogram_bl.gieStain == color_ref[which])]
+        layout = {'autosize': True, 'hovermode': 'closest', 'margin': {'l': 250, 'r': 199, 't': 120, 'b': 109, 'pad': 0}, 'xaxis1': {'anchor': 'y1', 'zeroline': False, 'ticks': 'inside', 'type': 'linear', 'range': [-2161775.8500000001, 45397292.850000001], 'showgrid': False, 'domain': [0.0, 1.0], 'side': 'bottom', 'tickfont': {'size': 10.0}, 'tick0': 0, 'dtick': 2000000, 'tickmode': False, 'mirror': 'ticks', 'showline': True}, 'yaxis1': {'anchor': 'x1', 'zeroline': False, 'ticks': 'inside', 'type': 'linear', 'range': [-1.0975000000000008, 23.047500000000014], 'showgrid': False, 'domain': [0.0, 1.0], 'side': 'left', 'tickfont': {'size': 10.0}, 'tick0': 21.700000000000014, 'dtick': -0.55000000000000071, 'tickmode': False, 'mirror': 'ticks', 'showline': True}, 'showlegend': False}
+        #'width': 2000, 'height': 1000, 
+        return [dcc.Graph(id= 'spore',figure = return_figure(ideo,layout))]
+
 
 
 
