@@ -300,7 +300,7 @@ def generate_table(dataframe):
 )
 def return_Ideogram(View,which):
     if View == 0:
-        image_filename = 'Ideo_IRIS_313-11825_20_7.png'
+        image_filename = 'Ideo_IRIS_313-11825_20_4.png'
         encoded_image = base64.b64encode(open(image_filename, 'rb').read())
         return [html.Img(id= 'spore',src='data:image/png;base64,{}'.format(encoded_image.decode()))]
     else:
